@@ -17,3 +17,17 @@ git clone https://github.com/your-username/LiteVecDB.git
 cd LiteVecDB
 pip install -e .
 ```
+
+## 🚀 Quick Start
+```python
+from litevecdb import LiteVecDB
+
+db = LiteVecDB(dim=3)
+
+db.add([1.0, 2.0, 3.0], {"name": "item1"})
+db.add([4.0, 5.0, 6.0], {"name": "item2"})
+
+results = db.search([1.0, 2.0, 3.1], k=1)
+print(results)
+# Output: [{'vector': [1.0, 2.0, 3.0], 'metadata': {'name': 'item1'}, 'distance': 0.1}]
+```
