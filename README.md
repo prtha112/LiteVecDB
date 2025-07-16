@@ -13,7 +13,7 @@ pip install litevecdb  # not yet on PyPI, clone and use local for now
 
 Or local dev:
 ```
-git clone https://github.com/your-username/LiteVecDB.git
+git clone https://github.com/prtha112/LiteVecDB.git
 cd LiteVecDB
 pip install -e .
 ```
