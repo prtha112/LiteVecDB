@@ -67,7 +67,7 @@ class LiteVecDB:
         self.shard_index['counts'][str(shard_id)] = len(shard_data['vectors'])
         self._save_index()
 
-    def search(self, query: List[float], k=3, metric="l2") -> List[Tuple[float, Any]]:
+    def search(self, query: List[float], k=3, metric="cosine") -> List[Tuple[float, Any]]:
         all_results = []
         query_np = np.array(query, dtype='float32')
     
@@ -83,19 +83,11 @@ class LiteVecDB:
                 top_k_idx = sim.argsort()[::-1][:k]  # reverse → highest first
                 for i in top_k_idx:
                     all_results.append((float(sim[i]), shard_data['metadata'][i]))
-            else:  # default: l2
-                distances = np.linalg.norm(vectors - query_np, axis=1)
-                top_k_idx = distances.argsort()[:k]
-                for i in top_k_idx:
-                    all_results.append((float(distances[i]), shard_data['metadata'][i]))
 
         if metric == "cosine":
             all_results.sort(key=lambda x: x[0], reverse=True)
-        else:
-            all_results.sort(key=lambda x: x[0])
     
         return all_results[:k]
-
 
     def get_all(self) -> list:
         results = []

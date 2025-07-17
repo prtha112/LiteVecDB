@@ -27,14 +27,14 @@ db = LiteVecDB(dim=3)
 db.add([1.0, 2.0, 3.0], {"name": "item1"})
 db.add([4.0, 5.0, 6.0], {"name": "item2"})
 
-results = db.search([1.0, 2.0, 3.1], k=1)
+results = db.search([1.0, 2.0, 3.1], k=3)
 print(results)
 # Output: [{'vector': [1.0, 2.0, 3.0], 'metadata': {'name': 'item1'}, 'distance': 0.1}]
 ```
 
 ## 🧠 Features
 - Save vectors to disk in compressed shards
-- Search by L2 or cosine
+- Search by cosine similarity  
 - Zero external dependencies (except numpy + zstd)
 - Great for local RAG / prototyping
 
