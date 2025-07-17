@@ -42,9 +42,3 @@ print(results)
 ```python
 pytest tests/
 ```
-
-## 🖼 Example Output
-
-Below is a search result from a Jupyter Notebook using cosine similarity and L2 distance:
-
-![Example output](assets/example_output.png)
