@@ -67,7 +67,16 @@ class LiteVecDB:
         self.shard_index['counts'][str(shard_id)] = len(shard_data['vectors'])
         self._save_index()
 
-    def search(self, query: List[float], k=3, metric="cosine") -> List[Tuple[float, Any]]:
+    def search(
+        self,
+        query: List[float],
+        k: int = 3,
+        metric: str = "cosine",
+        filters: dict = None
+    ) -> List[Tuple[float, Any]]:
+        if metric != "cosine":
+            raise ValueError("Only 'cosine' metric is supported in this version.")
+    
         all_results = []
         query_np = np.array(query, dtype='float32')
     
@@ -76,17 +85,24 @@ class LiteVecDB:
             if not shard_data['vectors']:
                 continue
     
-            vectors = np.array(shard_data['vectors'], dtype='float32')
+            filtered = [
+                (vec, meta)
+                for vec, meta in zip(shard_data['vectors'], shard_data['metadata'])
+                if not filters or self._match_filter(meta, filters)
+            ]
     
-            if metric == "cosine":
-                sim = self._cosine_similarity(vectors, query_np)
-                top_k_idx = sim.argsort()[::-1][:k]  # reverse → highest first
-                for i in top_k_idx:
-                    all_results.append((float(sim[i]), shard_data['metadata'][i]))
-
-        if metric == "cosine":
-            all_results.sort(key=lambda x: x[0], reverse=True)
+            if not filtered:
+                continue
     
+            vecs_filtered = np.array([x[0] for x in filtered], dtype='float32')
+            metas_filtered = [x[1] for x in filtered]
+    
+            sim = self._cosine_similarity(vecs_filtered, query_np)
+            top_k_idx = sim.argsort()[::-1][:k]
+            for i in top_k_idx:
+                all_results.append((float(sim[i]), metas_filtered[i]))
+    
+        all_results.sort(key=lambda x: x[0], reverse=True)
         return all_results[:k]
 
     def get_all(self) -> list:
@@ -128,3 +144,9 @@ class LiteVecDB:
         vecs_norm = vecs / np.linalg.norm(vecs, axis=1, keepdims=True)
         query_norm = query / np.linalg.norm(query)
         return np.dot(vecs_norm, query_norm)
+
+    def _match_filter(self, meta: dict, filters: dict) -> bool:
+        for key, expected_value in filters.items():
+            if meta.get(key) != expected_value:
+                return False
+        return True
