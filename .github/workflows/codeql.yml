@@ -2,9 +2,9 @@ name: CodeQL PR Scan
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feature/*]
   push:
-    branches: [main]
+    branches: [main, feature/*]
 
 jobs:
   analyze:

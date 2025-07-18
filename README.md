@@ -39,6 +39,35 @@ for score, meta in results:
 # Output: apple, banana
 ```
 
+## ➕ Add vector with TTL
+```python
+import time
+
+db = LiteVecDB(dim=3)
+
+db.add(
+    [0.1, 0.2, 0.3],
+    {
+        "name": "temporary vector",
+        "expires_at": time.time() + 60  # Expires in 60 seconds
+    }
+)
+
+db.add(
+    [0.2, 0.3, 0.4],
+    {
+        "name": "permanent vector"
+        # no expires_at → permanent
+    }
+)
+
+db.purge_expired()
+
+results = db.search([0.1, 0.2, 0.3])
+# Only returns vectors that have not expired
+# But not support purging in background yet
+```
+
 ## 🧠 Features
 - Save vectors to disk in compressed shards
 - Search by cosine similarity  

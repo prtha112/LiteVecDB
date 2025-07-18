@@ -140,6 +140,34 @@ class LiteVecDB:
     
         self.shard_index = {'last_shard': 0, 'counts': {}}
 
+    def purge_expired(self):
+        purged_count = 0
+    
+        for shard_id in range(self.shard_index['last_shard'] + 1):
+            shard_data = self._load_shard(shard_id)
+            if not shard_data['vectors']:
+                continue
+    
+            new_vectors = []
+            new_metadata = []
+    
+            for vec, meta in zip(shard_data['vectors'], shard_data['metadata']):
+                if not self._is_expired(meta):
+                    new_vectors.append(vec)
+                    new_metadata.append(meta)
+                else:
+                    purged_count += 1
+    
+            if len(new_vectors) != len(shard_data['vectors']):
+                shard_data['vectors'] = new_vectors
+                shard_data['metadata'] = new_metadata
+                self._save_shard(shard_id, shard_data)
+    
+            self.shard_index['counts'][str(shard_id)] = len(new_vectors)
+    
+        self._save_index()
+        print(f"Purged {purged_count} expired items.")
+
     def _cosine_similarity(self, vecs: np.ndarray, query: np.ndarray) -> np.ndarray:
         vecs_norm = vecs / np.linalg.norm(vecs, axis=1, keepdims=True)
         query_norm = query / np.linalg.norm(query)
@@ -150,3 +178,7 @@ class LiteVecDB:
             if meta.get(key) != expected_value:
                 return False
         return True
+
+    def _is_expired(self, meta: dict) -> bool:
+        expires_at = meta.get("expires_at")
+        return expires_at is not None and time.time() >= expires_at
