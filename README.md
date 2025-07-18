@@ -23,13 +23,20 @@ pip install -e .
 from litevecdb import LiteVecDB
 
 db = LiteVecDB(dim=3)
+db.delete_all()
 
-db.add([1.0, 2.0, 3.0], {"name": "item1"})
-db.add([4.0, 5.0, 6.0], {"name": "item2"})
+db.add([0.1, 0.2, 0.3], {"name": "apple", "category": "fruit"})
+db.add([0.2, 0.2, 0.2], {"name": "banana", "category": "fruit"})
+db.add([0.9, 0.8, 0.7], {"name": "tesla", "category": "car"})
 
-results = db.search([1.0, 2.0, 3.1], k=3)
-print(results)
-# Output: [{'vector': [1.0, 2.0, 3.0], 'metadata': {'name': 'item1'}, 'distance': 0.1}]
+query = [0.1, 0.2, 0.3]
+
+# Only return items where category == "fruit"
+results = db.search(query, k=5, filters={"category": "fruit"})
+
+for score, meta in results:
+    print(meta["name"])
+# Output: apple, banana
 ```
 
 ## 🧠 Features
@@ -37,6 +44,7 @@ print(results)
 - Search by cosine similarity  
 - Zero external dependencies (except numpy + zstd)
 - Great for local RAG / prototyping
+- Optional metadata filters (e.g. `{"category": "fruit"}`)
 
 ## 🛠 Test
 ```python
