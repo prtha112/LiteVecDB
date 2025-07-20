@@ -29,3 +29,22 @@ def test_search_expired_entries():
     result = db.search([1.0, 2.0, 3.0], k=3, filters={"location": "Bangkok"})
     assert len(result) > 0
     assert result[0][1]["text"] == "sample"
+
+def test_search_with_shard_and_index():
+    db = LiteVecDB(dim=3, dir_path="testdb")
+    db.delete_all()
+    for i in range(10):
+        vec = [1.0 * i, 2.0, 3.0]
+        db.add(vec, {"text": f"item-{i}"})
+    
+    query = [9.0, 2.0, 3.0]
+    result = db.search(query, k=3)
+
+    assert len(result) == 3
+    for score, meta, shard_id, index in result:
+        assert isinstance(score, float)
+        assert isinstance(meta, dict)
+        assert isinstance(shard_id, int)
+        assert isinstance(index, int)
+        shard = db._load_shard(shard_id)
+        assert meta == shard['metadata'][index]

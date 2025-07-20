@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "litevecdb"
+version = "0.1.0"
+description = "Lightweight sharded vector DB with optional S3 support"
+authors = [
+  { name = "prtha112", email = "thahi5_vi@hotmail.com" }
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "numpy",
+  "zstandard"
+]
+
+[project.urls]
+Homepage = "https://github.com/prtha112/litevecdb"
+Repository = "https://github.com/prtha112/litevecdb"
+
+[tool.setuptools.packages.find]
+where = ["."]
