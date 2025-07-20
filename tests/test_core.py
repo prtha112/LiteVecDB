@@ -48,3 +48,34 @@ def test_search_with_shard_and_index():
         assert isinstance(index, int)
         shard = db._load_shard(shard_id)
         assert meta == shard['metadata'][index]
+
+def test_delete_single_vector():
+    db = LiteVecDB(dim=3, dir_path="testdb")
+    db.delete_all()
+
+    db.add([1.0, 2.0, 3.0], {"text": "sample1"})
+    db.add([4.0, 5.0, 6.0], {"text": "sample2"})
+
+    all_data = db.get_all()
+    assert len(all_data) == 2
+
+    db.delete(shard_id=0, index=0)
+
+    remaining = db.get_all()
+    assert len(remaining) == 1
+    assert remaining[0]["metadata"]["text"] == "sample2"
+
+def test_delete_all_data():
+    db = LiteVecDB(dim=3, dir_path="testdb")
+    db.delete_all()
+
+    db.add([1.0, 2.0, 3.0], {"text": "sample1"})
+    db.add([4.0, 5.0, 6.0], {"text": "sample2"})
+
+    assert len(db.get_all()) == 2
+
+    db.delete_all()
+
+    assert db.get_all() == []
+    assert db.shard_index["counts"] == {}
+    assert db.shard_index["last_shard"] == 0
