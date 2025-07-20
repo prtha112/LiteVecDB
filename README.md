@@ -31,12 +31,14 @@ db.add([0.9, 0.8, 0.7], {"name": "tesla", "category": "car"})
 
 query = [0.1, 0.2, 0.3]
 
-# Only return items where category == "fruit"
 results = db.search(query, k=5, filters={"category": "fruit"})
 
-for score, meta in results:
-    print(meta["name"])
-# Output: apple, banana
+for score, meta, shard_id, index in results:
+    print(f"{meta['name']} (score={score:.3f}, shard={shard_id}, index={index})")
+
+# Output:
+# apple (score=1.000, shard=0, index=0)
+# banana (score=0.981, shard=0, index=1)
 ```
 
 ## ➕ Add vector with TTL
@@ -68,12 +70,23 @@ results = db.search([0.1, 0.2, 0.3])
 # But not support purging in background yet
 ```
 
+## ❌ Delete vectors
+```python
+results = db.search([0.1, 0.2, 0.3], k=1)
+score, meta, shard_id, index = results[0]
+
+db.delete(shard_id, index) # Deletes specific vector
+db.delete_all()  # Deletes all vectors
+```
+
 ## 🧠 Features
-- Save vectors to disk in compressed shards
-- Search by cosine similarity  
-- Zero external dependencies (except numpy + zstd)
-- Great for local RAG / prototyping
-- Optional metadata filters (e.g. `{"category": "fruit"}`)
+- ✅ Save vectors in compressed shards (Zstandard)
+- ✅ Fast cosine similarity search (with NumPy)
+- ✅ Optional metadata filters (e.g. {"category": "fruit"})
+- ✅ TTL and expiration with purge_expired()
+- ✅ Get vector location: shard ID + index (great for precise deletes)
+- ✅ Lightweight: only depends on numpy and zstandard
+- ✅ Ideal for local RAG pipelines or prototyping
 
 ## 🛠 Test
 ```python
