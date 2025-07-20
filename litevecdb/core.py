@@ -83,7 +83,7 @@ class LiteVecDB:
         k: int = 3,
         metric: str = "cosine",
         filters: dict = None
-    ) -> List[Tuple[float, Any]]:
+    ) -> List[Tuple[float, Any, int, int]]:
         # Search for top-k most similar vectors using cosine similarity
         if metric != "cosine":
             raise ValueError("Only 'cosine' metric is supported in this version.")
@@ -96,24 +96,28 @@ class LiteVecDB:
             if not shard_data['vectors']:
                 continue
     
-            # Filter vectors by metadata if filters are provided
+            # Include index to track location in shard
             filtered = [
-                (vec, meta)
-                for vec, meta in zip(shard_data['vectors'], shard_data['metadata'])
+                (i, vec, meta)
+                for i, (vec, meta) in enumerate(zip(shard_data['vectors'], shard_data['metadata']))
                 if not filters or self._match_filter(meta, filters)
             ]
     
             if not filtered:
                 continue
     
-            vecs_filtered = np.array([x[0] for x in filtered], dtype='float32')
-            metas_filtered = [x[1] for x in filtered]
+            vecs_filtered = np.array([x[1] for x in filtered], dtype='float32')
+            metas_filtered = [x[2] for x in filtered]
+            indices_filtered = [x[0] for x in filtered]
     
             # Calculate cosine similarity
             sim = self._cosine_similarity(vecs_filtered, query_np)
             top_k_idx = sim.argsort()[::-1][:k]
+    
             for i in top_k_idx:
-                all_results.append((float(sim[i]), metas_filtered[i]))
+                all_results.append(
+                    (float(sim[i]), metas_filtered[i], shard_id, indices_filtered[i])
+                )
     
         # Sort all results by similarity score and return top-k
         all_results.sort(key=lambda x: x[0], reverse=True)
